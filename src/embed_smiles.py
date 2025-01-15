@@ -12,7 +12,7 @@ from joblib import dump
 from rdkit.Chem import AllChem, MACCSkeys, MolFromSmiles
 from sklearn.model_selection import train_test_split
 
-from src.constants import DATA_DIR
+from src.constants import DATA_DIR, EMBEDDINGS_DIR
 from src.utils import decompress_and_unpickle, pickle_and_compress
 
 
@@ -58,9 +58,9 @@ def embed_smiles_via_morgan_finterprint(
 ):
     smiles_path = Path(smiles_path)
     out_path = (
-        Path(DATA_DIR)
-        / f"embeddings/{smiles_path.stem}_morgan_radius={radius}_dim={embed_dim}"
+        EMBEDDINGS_DIR / f"{smiles_path.stem}_morgan_radius={radius}_dim={embed_dim}"
     )
+    EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
     if not out_path.exists():
         all_smiles = decompress_and_unpickle(smiles_path)
 
@@ -74,12 +74,16 @@ def embed_smiles_via_morgan_finterprint(
         # Embed SMILES
         print(f"Embedding with dim={embed_dim}, radius={radius}...")
         t0 = time.time()
-        data = [
-            morgan_fingerprint_embedding(
-                smiles=smiles, radius=radius, embed_dim=embed_dim
-            )
-            for smiles in all_smiles
-        ]
+        data = []
+        for smiles in all_smiles:
+            try:
+                data.append(
+                    morgan_fingerprint_embedding(
+                        smiles=smiles, radius=radius, embed_dim=embed_dim
+                    )
+                )
+            except:
+                continue
         print(f"\t Took {round(time.time()-t0, 2)} seconds")
 
         # Save embedding
