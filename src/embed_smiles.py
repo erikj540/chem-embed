@@ -1,9 +1,6 @@
-import gzip
-import pickle
 import time
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable, List
 
 import click
 import faiss
@@ -20,6 +17,19 @@ def morgan_fingerprint_embedding(smiles: str, radius: int, embed_dim: int):
     fp_gen = AllChem.GetMorganGenerator(radius=radius, fpSize=embed_dim)
     mol = MolFromSmiles(smiles)
     return fp_gen.GetFingerprintAsNumPy(mol)
+
+
+def embed_smiles(all_smiles: List[str], embed_fcn: Callable, **kwargs):
+    print(f"Embedding SMILES...")
+    t0 = time.time()
+    data = []
+    for smiles in all_smiles:
+        try:
+            data.append(embed_fcn(smiles=smiles, **kwargs))
+        except:
+            continue
+    print(f"\t Embedding took {round(time.time()-t0, 2)} seconds")
+    return np.array(data)
 
 
 @click.command(

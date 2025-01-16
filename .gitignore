@@ -172,3 +172,6 @@ cython_debug/
 
 # Large files to ignore
 data/embeddings
+
+# Mac files
+.DS_STORE
